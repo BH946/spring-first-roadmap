@@ -205,7 +205,7 @@ public class HelloController {
 * 웹 브라우저 -> 톰캣 -> 스프링 컨테이너
   * 우선 Controller 를 찾고, 있으면 viewResolver 가 활동해서 화면 출력
 
-![image-20230121222919782](.\images\image-20230121222919782.png)
+<img src=".\images\image-20230121222919782.png" alt="image-20230121222919782"  />
 
 
 
@@ -215,7 +215,7 @@ public class HelloController {
 
 * 스프링 부트는 컨트롤러를 먼저 찾고, 해당 컨트롤러가 없으면 정적(static) 에서 찾는다.
 
-![image-20230121224130633](.\images\image-20230121224130633.png)
+<img src=".\images\image-20230121224130633.png" alt="image-20230121224130633"  />
 
 
 
@@ -229,13 +229,13 @@ public class HelloController {
   * byte 처리 등등기타여러 HttpMessageConverter가 기본으로등록되어있음
 * 참고: 클라이언트의 HTTP Accept 해더와 서버의 컨트롤러 반환타입 정보 둘을 조합해서  HttpMessageConverter 가 선택된다.
 
-![image-20230121224502957](.\images\image-20230121224502957.png)
+<img src=".\images\image-20230121224502957.png" alt="image-20230121224502957"  />
 
 <br>
 
 ## 일반적인 웹 애플리케이션 계층 구조
 
-![image-20230122182221632](.\images\image-20230122182221632.png)
+<img src=".\images\image-20230122182221632.png" alt="image-20230122182221632"  />
 
 * **컨트롤러: 웹 MVC의 컨트롤러역할**
 * 서비스: 핵심 비즈니스 로직구현
@@ -347,7 +347,7 @@ class MemberServiceIntegrationTest {
 * 기능: 회원등록, 조회
 * 아직데이터저장소가 선정되지않음(가상의시나리오)
 
-![image-20230122182414655](.\images\image-20230122182414655.png)
+<img src=".\images\image-20230122182414655.png" alt="image-20230122182414655"  />
 
 
 
@@ -376,7 +376,7 @@ class MemberServiceIntegrationTest {
 * 따라서 같은 스프링 빈이면 모두 같은 인스턴스다. 
   * 설정으로 싱글톤이 아니게 설정할 수 있지만, 특별한 경우를 제외하면 대부분 싱글톤을 사용한다.
 
-![image-20230122200406422](.\images\image-20230122200406422.png)
+<img src=".\images\image-20230122200406422.png" alt="image-20230122200406422"  />
 
 
 
@@ -481,7 +481,7 @@ class MemberServiceIntegrationTest {
 
 
 
-![image-20230122203919618](.\images\image-20230122203919618.png)
+<img src=".\images\image-20230122203919618.png" alt="image-20230122203919618"  />
 
 * `h2.sh` 존재 꼭 확인
   * 윈도우 사용자는 `./h2.bat` 으로 실행
@@ -595,11 +595,11 @@ public class JdbcMemberRepository implements MemberRepository {
 
 
 
-![image-20230123015715763](.\images\image-20230123015715763.png)
+<img src=".\images\image-20230123015715763.png" alt="image-20230123015715763"  />
 
 
 
-![image-20230123015847813](.\images\image-20230123015847813.png)
+<img src=".\images\image-20230123015847813.png" alt="image-20230123015847813"  />
 
 
 
@@ -831,7 +831,7 @@ public class SpringConfig {
 
 **상속받은 JpaRepository 인터페이스 구조**
 
-![image-20230124165121701](.\images\image-20230124165121701.png)
+<img src=".\images\image-20230124165121701.png" alt="image-20230124165121701"  />
 
 * 앞서 얘기했듯이 CRUD나 페이징 기능 등등을 이렇게 제공하고 있는 것
 
@@ -868,7 +868,7 @@ public class SpringConfig {
 
 * **원하는 곳에 타겟팅을 해서 적용할 수 있다!!**
 
-![image-20230124172613638](.\images\image-20230124172613638.png)
+<img src=".\images\image-20230124172613638.png" alt="image-20230124172613638"  />
 
 
 
@@ -903,7 +903,7 @@ public class TimeTraceAop {
 
 **AOP 적용 전 전체 그림**
 
-![image-20230124172739017](.\images\image-20230124172739017.png)
+<img src=".\images\image-20230124172739017.png" alt="image-20230124172739017"  />
 
 
 
@@ -912,7 +912,7 @@ public class TimeTraceAop {
 * 예로 memberService의 경우 만약 AOP적용 한다고 스프링이 판단하면, 
 * 프록시라고 실제가 아닌 가상으로 실행해서 joinPoint.proceed() 를 만나면 실제 memberService를 실행하는 것이다.
 
-![image-20230124172756957](.\images\image-20230124172756957.png)
+<img src=".\images\image-20230124172756957.png" alt="image-20230124172756957"  />
 
 
 
@@ -920,7 +920,7 @@ public class TimeTraceAop {
 
 * MemberService뒤에 Enhancer... 라면서 뒤에 덧 붙여있는게 실행되었다는걸 알 수 있다.
 
-![image-20230124172905478](.\images\image-20230124172905478.png)
+<img src=".\images\image-20230124172905478.png" alt="image-20230124172905478"  />
 
 <br>
 
