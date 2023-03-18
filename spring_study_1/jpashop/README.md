@@ -497,6 +497,7 @@ class MemberServiceIntegrationTest {
   * 참고로 DB 생성 확인 이후부터는 소켓별로 접속 전부 할 수 있게끔
   * JDBC URL:에 `jdbc:h2:tcp://localhost/~/test` 이렇게 접속한다.
 * 문제가 있다면?? 터미널에서 `rm 파일명..` 으로 삭제했다가 다시!
+* **참고 : 필자는 `testdb.mv.db` 파일로 생성 및 `jdbc:h2:tcp://localhost/~/spring_study_dbh2/testdb` 경로에 따로 저장해서 사용!!**
 
 
 
