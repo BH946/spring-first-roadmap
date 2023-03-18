@@ -13,6 +13,10 @@
 
 <br>
 
+**h2 참고 : `???.mv.db` 파일은 `jdbc:h2:tcp://localhost/~/spring_study_dbh2/???` 경로에 따로 저장해서 사용중!!**
+
+<br><br>
+
 ## Move
 
 * **[스프링 입문 - 코드로 배우는 스프링 부트, 웹 MVC, DB 접근 기술](./spring_study_1)**
