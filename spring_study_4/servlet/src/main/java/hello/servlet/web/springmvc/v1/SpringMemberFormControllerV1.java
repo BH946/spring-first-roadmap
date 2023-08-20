@@ -9,7 +9,7 @@ public class SpringMemberFormControllerV1 {
 
     @RequestMapping("/springmvc/v1/members/new-form")
     public ModelAndView process() {
-        return new ModelAndView("new-form");
+        return new ModelAndView("new-form"); // new-form.jsp 사용 (뷰)
     }
 
 }
