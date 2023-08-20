@@ -9,5 +9,8 @@ import java.util.Map;
  */
 public interface ControllerV4 {
 
+    /**
+     * model 은 주소로 넘어가니까 안에서 수정해도 잘 적용
+     */
     String process(Map<String, String> paramMap, Map<String, Object> model);
 }
