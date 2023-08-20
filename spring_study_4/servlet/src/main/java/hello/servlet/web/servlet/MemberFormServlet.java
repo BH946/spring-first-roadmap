@@ -13,7 +13,7 @@ import java.io.PrintWriter;
 
 /**
  * HttpServlet 상속 필수 -> Ctrl+O (service 오버라이드)
- * form 데이터 넘어가는지 확인용
+ * form 데이터 구성 화면넘어가는지 확인용
  */
 @WebServlet(name = "memberFormServlet", urlPatterns = "/servlet/members/new-form")
 public class MemberFormServlet extends HttpServlet {
