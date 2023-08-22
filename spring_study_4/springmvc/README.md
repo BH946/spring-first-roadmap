@@ -267,15 +267,154 @@ public HelloData responseBodyJsonV2() {
 
 ## HTTP 메시지 컨버터
 
+**HTTP 메시지 컨버터가 언제 사용되는지 보자**
 
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/dd2c0458-0f0f-4ef7-be3c-d52f56aed5bf) 
+
+<br>
+
+**스프링 MVC는 다음의 요청, 응답 경우에 HTTP 메시지컨버터를 적용한다.**
+
+* HTTP 요청: @RequestBody , HttpEntity(RequestEntity)
+* HTTP 응답: @ResponseBody , HttpEntity(ResponseEntity)
+
+<br>
+
+**HTTP 메시지컨버터 동작 함수**
+
+* canRead() , canWrite() : 메시지 컨버터가 해당 클래스, 미디어타입을 지원하는지 체크 
+
+* read() , write() : 메시지 컨버터를 통해서 메시지를 읽고 쓰는 기능
+
+<br>
+
+**우선순위**
+
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/e845bf62-0475-4dbc-a702-971a15b021c8) 
+
+<br>
+
+**예를 들어 아래의 ? 부분을 해석해보자.**
+
+* 먼저 클래스 타입을 확인하는데 Byte->String->HelloData 순으로 확인되고 현재까지는 MappingJac....컨버터이다.
+* 이후 미디어 타입을 확인하는데 content타입이 json이 아니고 text/html 이기 때문에 MappingJac...컨버터가 될 수 없다.
+* 탈락. 동작 안되는 CASE
+
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/31dd3228-91ad-4351-b3c8-be049f760253) 
 
 <br><br>
 
 ## 요청 매핑 헨들러 어뎁터 구조
 
+**HTTP 메시지 컨버터는 어디서 사용하는지 추적해보자**
 
+**기존 스프링 MVC에서 Front Controller 부분인 Dispatcher Servlet 은 핸들러 어댑터로 동작하는 과정이 있는데, 이때 `RequestMappingHandlerAdapter` 어댑터를 한번 살펴보자.**
 
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/183afe1d-6219-49a0-9243-47acd3725b7d) 
 
+<br>
+
+**`ArgumentResolver` 가 이때 등장하며 이녀석은 `@RequestParam, @ModelAttribute` 등등 다양한 파라미터, 애노테이션을 기반으로 데이터 생성하게끔 30개 이상이 구현되어 있다.**
+
+* 예로 @RequestParam 을 쓰게되면 @RequestParam 전용으로 개발된 ArguemntResolver 가 해당 파라미터를 매핑해와서 값을 주는 것이다.
+* `ArgumentResolver` 관련 구현된 인터페이스를 보면 `supportsParameter() 와 resolveArgument()` 로 구성되어 있다.
+
+<br>
+
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/1acf49cb-d716-4803-bf84-8cdc4aaaa687) 
+
+**다양한 ArgumentResolver 중에서 `@RequestBody, HttpEntity` 같은 것들은 HTTP 메시지 컨버터까지 사용을 해야 데이터를 처리할 수 있어서 이녀석들은 위와 같은 구조로 동작을 한다.**
+
+<br>
+
+**만약 기능 확장의 경우는 `WebMvcConfigurer` 를 상속받아서 스프링 빈으로 등록하면 된다.**
+
+* @Bean으로 등록하거나 @Configuration 으로 설정파일임을 알리면서 빈으로 등록해도 된다.
+
+* 예로 로그인 관련 ArgumentResolver 확장과 인증관련 인터셉터 확장은 아래처럼 진행한다.
+
+  ```java
+  @Configuration // 설정 파일임을 알림
+  @Slf4j
+  public class ApiConfig implements WebMvcConfigurer {
+      @Override
+      public void addArgumentResolvers(List<HandlerMethodArgumentResolver> resolvers) {
+          resolvers.add(new LoginMemberArgumentResolver());
+      }
+  
+      @Override
+      public void addInterceptors(InterceptorRegistry registry) {
+          registry.addInterceptor(new MemberCheckInterceptor())
+                  .order(2)
+                  .addPathPatterns("/**") // 모든 경로 접근
+                  .excludePathPatterns("/", "/api/v1/members/login", "/api/v1/members/register",
+                          "/api/v1/members/logout","/css/**","/*.ico","/error"); // 제외 경로!
+  
+      }
+  }
+  ```
+
+* `LoginMemberArgumentResolver(), MemberCheckInterceptor()` 이 두가지를 새로 만들어서 등록함으로써 기능 확장을 진행한 것이다.
+
+* 이 두내용은 참고용으로 코드 남겨두겠다.
+
+  ```java
+  /**
+  * LoginMemberArgumentResolver()
+  */
+  @Slf4j
+  public class LoginMemberArgumentResolver implements HandlerMethodArgumentResolver {
+  
+      @Override
+      public boolean supportsParameter(MethodParameter parameter) {
+          log.info("supportsParameter 실행");
+  
+          boolean hasLoginAnnotation = parameter.hasParameterAnnotation(Login.class);
+          boolean hasLongType = Long.class.isAssignableFrom(parameter.getParameterType());
+          // 어노테이션이 @Login 이고, 해당 파라미터 타입이 Long 라면 true 반환
+          return hasLoginAnnotation && hasLongType;
+      }
+  
+      // 위 supportsParameter 가 true 면 아래 함수가 실행
+      @Override
+      public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer mavContainer, NativeWebRequest webRequest, WebDataBinderFactory binderFactory) throws Exception {
+          log.info("resolveArgument 실행");
+  
+          HttpServletRequest request = (HttpServletRequest) webRequest.getNativeRequest();
+          HttpSession session = request.getSession(false); // false : 없으면 null
+          if(session == null) {
+              return null;
+          }
+  
+          Long memberId = Long.valueOf(session.getAttribute("login_member").toString());
+          return memberId;
+      }
+  }
+  ```
+
+  ```java
+  /**
+  * MemberCheckInterceptor()
+  */
+  @Slf4j // log
+  public class MemberCheckInterceptor implements HandlerInterceptor {
+      @Override
+      public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+  
+          String requestURI = request.getRequestURI();
+          log.info("인증 체크 인터셉터 실행 {}", requestURI);
+  
+          HttpSession session = request.getSession();
+          if(session == null || session.getAttribute("login_member")==null) {
+              log.info("미인증 사용자 요청");
+              // 회원 아님을 알림
+              response.setStatus(HttpStatus.UNAUTHORIZED.value()); // status code : 401
+              return false;
+          }
+          return true;
+      }
+  }
+  ```
 
 <br><br>
 
