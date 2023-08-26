@@ -44,6 +44,7 @@ public class ErrorPageController {
         return "error-page/500";
     }
 
+    // (참고) API 예외처리 부분
     @RequestMapping(value = "/error-page/500", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<Map<String, Object>> errorPage500Api(
             HttpServletRequest request, HttpServletResponse response) {
