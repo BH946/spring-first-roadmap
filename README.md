@@ -26,4 +26,12 @@
   * **[스프링 MVC 1편 - item-service](./spring_study_4/item-service)**
 
 
-* [스프링 MVC 2편 - 백엔드 웹 개발 핵심 기술](./spring_study_5/)
+* **[스프링 MVC 2편 - 백엔드 웹 개발 핵심 기술](./spring_study_5/)**
+
+  * **[스프링 MVC 2편 - thymeleaf](./spring_study_5/thymeleaf-basic/)**
+  * **[스프링 MVC 2편 - message](./spring_study_5/message/)**
+  * **[스프링 MVC 2편 - validation](./spring_study_5/validation/)**
+  * **[스프링 MVC 2편 - typeconverter](./spring_study_5/typeconverter/)**
+  * **[스프링 MVC 2편 - login](./spring_study_5/login/)**
+  * **[스프링 MVC 2편 - exception](./spring_study_5/exception/)**
+  * **[스프링 MVC 2편 - upload](./spring_study_5/upload/)**
