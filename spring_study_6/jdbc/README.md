@@ -44,12 +44,13 @@
     - 트랜잭션 추상화로 해결하는 것(ex:인터페이스)
   - 트랜잭션 동기화 문제 -> 스프링이 제공하는 "트랜잭션 동기화 매니저(트랜잭션 매니저)"를 사용
   - 트랜잭션 적용 반복 문제 -> TransactionTemplate 사용
-  - **이 모든것을 한번에 해결? @Transactional 사용**
+  - **(기억)이 모든것을 한번에 해결? @Transactional 사용**
 - **예외 누수 문제**
   - **스프링**은 데이터 접근 계층에 대한 **"일관된 예외 추상화"**를 제공 + **"예외 변환기"** 제공
-    - 스프링이 제공하는 데이터 접근 예외를 사용하기만 하면 됨
+    - 스프링 제공 예외변환기 사용후 스프링이 제공하는 데이터 접근 예외 클래스를 사용
 - **JDBC 코드 반복 문제** -> 레퍼지토리 계층
-  - JdbcTemplate 사용
+  - JdbcTemplate 사용 -> 커넥션 동기화, 예외변환, 리소스 등 한번에 제공
+  - **(기억)결론적으로 여기서 해결법은? JdbcTemplate 사용**
 
 <br>
 
@@ -85,7 +86,7 @@ JDBC -> SQL Mapper -> ORM 기술발전
 
 <br>
 
-JDBC 적용 : `MemberRepositoryV0.java` 와 테스트코드 참고 -> 옛날 방식 그대로
+JDBC 적용 : `MemberRepositoryV0.java` 와 테스트코드 참고 -> 옛날 방식
 
 <br>
 
@@ -97,10 +98,13 @@ JDBC 적용 : `MemberRepositoryV0.java` 와 테스트코드 참고 -> 옛날 방
 - 10개 제한인데 11개 커넥션시 **30초 후 예외터짐(기본값)**
 - `MyPool - Pool stats (total=8, active=2, idle=6, waiting=0)` 로그 : 총개수, 사용개수, 풀에서 대기개수, 대기개수
 
+<br>
+
 **DataSource**는 다양한 커넥션 풀을 구현체로 둬서 쉽게 변경하기위한 **인터페이스**
 
-- 기존 DriverManager 사용시 매번 "신규 커넥션 생성" -> 커넥션 풀로 변경하자! (기본 제공중)
-  - 단, DriverManager는 DataSource를 사용하지 않음 -> 사용하는 클래스 따로 제공 `DriverManagerDataSource`
+- 기존 **DriverManager** 사용시 매번 **"신규 커넥션 생성"** -> 커넥션 풀로 변경하자! (기본 제공중)
+  - 단, DriverManager는 **DataSource를 사용하지 않음** -> 사용하는 클래스 따로 제공 `DriverManagerDataSource`
+  - 기본적으로 DB정보(URL,ID,PW 등)을 설정파일에서 읽는것도 지원한다.
 
 <img src="https://github.com/BH946/spring-first-roadmap/assets/80165014/97b244c2-5445-4361-8a6b-c3a1fd8f4b5c" alt="image" style="zoom: 80%;" /> 
 
@@ -109,6 +113,7 @@ JDBC 적용 : `MemberRepositoryV0.java` 와 테스트코드 참고 -> 옛날 방
 `ConnectionTest.java, MemberRepositoryV1.java` 코드(+테스트코드)를 참고 -> Datasource 사용과 커넥션 풀 사용모습
 
 - 참고로 커넥션 풀 로그보려면 **로그레벨 DEBUG** 로 해서 봐야함 -> 스프링부트 3.1부터 바뀜
+- 참고로 `dataSource.setUsername(USERNAME);` 이런식으로 세팅 가능하며 따로 yaml 파일에 작성후 생략도 가능하다.
 
 <br><br>
 
@@ -176,7 +181,7 @@ commit하면 상태가 "완료"로 변경, rollback하면 임시를 다 제거(�
 
 ## 예외
 
-예외를 처리하지 못하고 계속 상위로 던지면??
+예외를 처리하지 못하고 **계속 상위로 던지면??**
 
 - 자바의 main 스레드는 예외 로그를 출력하고 시스템 종료
 - 실무에서는 바로 종료하면 안되므로 WAS가 해당 예외를 처리 -> 오류페이지를 따로 보여주는식으로
@@ -196,16 +201,18 @@ commit하면 상태가 "완료"로 변경, rollback하면 임시를 다 제거(�
 **실무에서는?? -> 기본원칙 2가지 준수**
 
 - 기본적으로 **언체크(런타임) 예외를 사용**하자(**문서화 필수!**) -> 체크 예외의 2가지 문제 때문
-  - 복구 불가능한 예외 문제
-    - 정의된 SQL ErrorCode를 이용해 SQLException을 예외변환 후 서비스에서 이를 catch해서 복구로직 구현
-  - 인터페이스에 조차 throws를 해줘야해서 의존 관계의 문제
+  - (1) 복구 불가능한 예외 문제
+    - 정의된 SQL ErrorCode를 이용해 **레포지토리**에서 SQLException을 예외변환 후 **서비스**에서 이를 catch해서 복구로직 구현
+  - (2) 인터페이스에 조차 throws를 해줘야해서 의존 관계의 문제
     - 런타임 예외 적용 + 예외변환으로 해결
     - 예외변환은 `throw new 커스텀예외(e);` 처럼 현재 error를 담는 e를 꼭 생성자 매개변수에 넘겨줘야 하위의 에러내용들을 다 기록하므로 이부분 주의하자!   
-      (물론 스프링은 이 또한 다 제공해서 개념만 알아두면 된다)
+      (물론 스프링은 예외변환기를 제공하고 있음)
   - **이 문제들을 다 해결하는 방법을 스프링은 제공하고 있다.**
     - `DataAccessException` 에 필요한 예외 가져다 사용
     - `SQLErrorCodeSQLExceptionTranslator` 로 예외변환기 한줄작성
-    - **(중요)단, JdbcTemplate 을 사용하면 지금까지 배운 모든걸 한번에 제공해준다..!**
+      - 예외변환기 사용시 코드한줄로 **SQL ErrorCode에 매핑된 스프링 제공 예외클래스를 자동으로 반환**해줌 -> 따라서 이것만 기억하면 됨
+      - 코드한줄 : `throw exTranslator.translate("save", sql, e);`
+    - **(중요)단, JdbcTemplate 을 사용하면 지금까지 배운 모든걸 한번에 제공..!**
 - **체크 예외**는 비지니스 로직상 너무 중요해서 **의도적으로 던지는 예외에만** 사용하자 -> 예로 계좌이체 실패 예외
 
 <br>
@@ -222,11 +229,11 @@ commit하면 상태가 "완료"로 변경, rollback하면 임시를 다 제거(�
 
 <br>
 
-test 패키지에 있는 exception/basic 하위에 `CheckedAppTest, CheckedTest, UnCheckedAppTest, UncheckedTest` 참고
+test 패키지에 있는 exception/basic 하위에 `CheckedAppTest, CheckedTest, UnCheckedAppTest, UncheckedTest` 자바파일 참고
 
 <br><br>
 
-## 스프링 제공 - 트랜잭션
+## (서비스)스프링 제공 - 트랜잭션
 
 
 
@@ -234,11 +241,189 @@ test 패키지에 있는 exception/basic 하위에 `CheckedAppTest, CheckedTest,
 
 <br><br>
 
-## 스프링 제공 - 예외 처리, 반복
+## (레포지토리)스프링 제공 - 예외 처리, 반복
 
+**레퍼지토리의 유연성을 높이기 위해 "인터페이스"로 구현을 해주고,**
 
+**레퍼지토리에 JdbcTemplate 을 사용하면 끝! -> 우리는 JDBC를 사용중이니까 이것을 사용**
 
+- 커넥션 조회, 커넥션 동기화
+- `PreparedStatement` 생성 및 파라미터 바인딩
+- 쿼리실행, 결과 바인딩
+- 예외 발생시 스프링 예외 변환기 실행
+- 리소스 종료(close)
+- **이 모든것을 JdbcTemplate 하나로 해결가능**
 
+다른 복잡한 중간내용은 생략하겠다.
+
+```java
+/**
+ * JdbcTemplate 사용
+ */
+@Slf4j
+public class MemberRepositoryV5 implements MemberRepository {
+
+    private final JdbcTemplate template;
+
+    public MemberRepositoryV5(DataSource dataSource) {
+        this.template = new JdbcTemplate(dataSource);
+    }
+
+    @Override
+    public Member save(Member member) {
+        String sql = "insert into member(member_id, money) values (?, ?)";
+        template.update(sql, member.getMemberId(), member.getMoney());
+        return member;
+    }
+
+    @Override
+    public Member findById(String memberId) {
+        String sql = "select * from member where member_id = ?";
+        return template.queryForObject(sql, memberRowMapper(), memberId);
+    }
+
+    @Override
+    public void update(String memberId, int money) {
+        String sql = "update member set money=? where member_id=?";
+        template.update(sql, money, memberId);
+    }
+
+    @Override
+    public void delete(String memberId) {
+        String sql = "delete from member where member_id=?";
+        template.update(sql, memberId);
+    }
+
+    private RowMapper<Member> memberRowMapper() {
+        return (rs, rowNum) -> {
+            Member member = new Member();
+            member.setMemberId(rs.getString("member_id"));
+            member.setMoney(rs.getInt("money"));
+            return member;
+        };
+    }
+}
+```
+
+<br>
+
+```java
+/**
+ * 예외 누수 문제 해결
+ * SQLException 제거
+ *
+ * MemberRepository 인터페이스 의존
+ */
+@Slf4j
+@SpringBootTest // 스프링 빈 사용을 위해 필수
+class MemberServiceV4Test {
+
+    public static final String MEMBER_A = "memberA";
+    public static final String MEMBER_B = "memberB";
+    public static final String MEMBER_EX = "ex";
+
+    @Autowired // 아래 스프링 빈에 등록한 레포, 서비스를 주입
+    private MemberRepository memberRepository;
+    @Autowired
+    private MemberServiceV4 memberService;
+
+    @TestConfiguration // 테스트에서 스프링빈 등록을 지원하는 어노테이션
+    static class TestConfig {
+
+        // URL,ID,PW가 없는건 application.properties에서 읽었기에 생략가능
+        private final DataSource dataSource;
+
+        public TestConfig(DataSource dataSource) {
+            this.dataSource = dataSource;
+        }
+
+        @Bean
+        MemberRepository memberRepository() {
+//            return new MemberRepositoryV4_1(dataSource);
+//            return new MemberRepositoryV4_2(dataSource);
+            return new MemberRepositoryV5(dataSource);
+        }
+
+        @Bean
+        MemberServiceV4 memberServiceV4() {
+            return new MemberServiceV4(memberRepository());
+        }
+    }
+
+    @AfterEach
+    void after() {
+        memberRepository.delete(MEMBER_A);
+        memberRepository.delete(MEMBER_B);
+        memberRepository.delete(MEMBER_EX);
+    }
+
+    @Test
+    void AopCheck() {
+        log.info("memberService class={}", memberService.getClass());
+        log.info("memberRepository class={}", memberRepository.getClass());
+        Assertions.assertThat(AopUtils.isAopProxy(memberService)).isTrue();
+        Assertions.assertThat(AopUtils.isAopProxy(memberRepository)).isFalse();
+    }
+
+    @Test
+    @DisplayName("정상 이체")
+    void accountTransfer() {
+        //given
+        Member memberA = new Member(MEMBER_A, 10000);
+        Member memberB = new Member(MEMBER_B, 10000);
+        memberRepository.save(memberA);
+        memberRepository.save(memberB);
+
+        //when
+        memberService.accountTransfer(memberA.getMemberId(), memberB.getMemberId(), 2000);
+
+        //then
+        Member findMemberA = memberRepository.findById(memberA.getMemberId());
+        Member findMemberB = memberRepository.findById(memberB.getMemberId());
+        assertThat(findMemberA.getMoney()).isEqualTo(8000);
+        assertThat(findMemberB.getMoney()).isEqualTo(12000);
+    }
+
+    @Test
+    @DisplayName("이체중 예외 발생")
+    void accountTransferEx() {
+        //given
+        Member memberA = new Member(MEMBER_A, 10000);
+        Member memberEx = new Member(MEMBER_EX, 10000);
+        memberRepository.save(memberA);
+        memberRepository.save(memberEx);
+
+        //when
+        assertThatThrownBy(() -> memberService.accountTransfer(memberA.getMemberId(), memberEx.getMemberId(), 2000))
+                .isInstanceOf(IllegalStateException.class);
+
+        //then
+        Member findMemberA = memberRepository.findById(memberA.getMemberId());
+        Member findMemberB = memberRepository.findById(memberEx.getMemberId());
+        assertThat(findMemberA.getMoney()).isEqualTo(10000);
+        assertThat(findMemberB.getMoney()).isEqualTo(10000);
+    }
+
+}
+```
+
+<br>
+
+예외커스텀, 예외복구용(중복키 예외) : `MyDbException.java, MyDuplicateKeyException.java`
+
+예외누수 해결 : `MemberRepositoryV4_1` -> 런타임 예외로 변경 + 레포지토리 인터페이스 추가하여 사용 + throws SQLException 제거(체크예외때 추가했던)
+
+예외누수 해결+예외변환기 추가 : `MemberRepositoryV4_2` 는 SQLExceptionTranslator(예외변환기)를 추가 -> errorCode조건문까지 자동적용하여 스프링이 제공하는 예외 클래스로 자동 반환
+
+JdbcTemplate(끝판왕) : `MemberRepositoryV5` 말도안되게 코드가 줄어들었고, 필요시 db데이터와 객체의 매핑만 추가 구현하면 된다.
+
+레포지토리 인터페이스에 의존 : `MemberServiceV4`
+
+참고) test 패키지에 translator 패키지하위는 **"예외복구" 내용과 "예외변환기" 사용 방법**을 확인가능  
+-> 이 둘을 합치진 않았는데 합치면 훨씬 코드 단축이 가능하다는걸 이해(예외복구+예외변환기)
+
+- 물론 예외변환기 조차도 JdbcTemplate 은 자동으로 제공한다.
+- **즉, 예외복구는 비지니스로직이니까 "서비스"에 작성되는데 "레퍼지토리"에 JdbcTemplate을 사용하면 예외변환기조차 생략하고 비지니스로직(예외복구)만 생각하면 되는것이다.**
 
 <br><br>
 
