@@ -176,11 +176,53 @@ commit하면 상태가 "완료"로 변경, rollback하면 임시를 다 제거(�
 
 ## 예외
 
-예외 개념만 여기서먼저 정리해두자. -> 간략하게만.
+예외를 처리하지 못하고 계속 상위로 던지면??
 
+- 자바의 main 스레드는 예외 로그를 출력하고 시스템 종료
+- 실무에서는 바로 종료하면 안되므로 WAS가 해당 예외를 처리 -> 오류페이지를 따로 보여주는식으로
 
+<br>
 
+컴파일러의 체크 유무에 따라 -> **체크예외(Exception상속), 언체크예외(RuntimeException상속) 분류**
 
+- **체크예외**는 반드시 **"잡거나 던지거나" 둘중 하나를 처리**해야 한다.
+  - `throw` 로 던지거나 `try...catch...finally` 로 잡는다.
+- **언체크예외**는 처리하지 않아도 된다 -> 자동으로 `throws`로 던져주기 때문
+- **참고) 에러메시지 출력 흐름은??** -> Exception을 상속받은 클래스의 생성자에서 `super("에러메시지")` 를 입력하면 Exception 클래스의 detailMessage 변수에 기록하여 나중에 에러로그에 출력해준다.
+  - 따라서 `throw new 클래스("에러메시지")` 를 하면 Exception이 에러메시지를 가지게 되는것이다.
+
+<br>
+
+**실무에서는?? -> 기본원칙 2가지 준수**
+
+- 기본적으로 **언체크(런타임) 예외를 사용**하자(**문서화 필수!**) -> 체크 예외의 2가지 문제 때문
+  - 복구 불가능한 예외 문제
+    - 정의된 SQL ErrorCode를 이용해 SQLException을 예외변환 후 서비스에서 이를 catch해서 복구로직 구현
+  - 인터페이스에 조차 throws를 해줘야해서 의존 관계의 문제
+    - 런타임 예외 적용 + 예외변환으로 해결
+    - 예외변환은 `throw new 커스텀예외(e);` 처럼 현재 error를 담는 e를 꼭 생성자 매개변수에 넘겨줘야 하위의 에러내용들을 다 기록하므로 이부분 주의하자!   
+      (물론 스프링은 이 또한 다 제공해서 개념만 알아두면 된다)
+  - **이 문제들을 다 해결하는 방법을 스프링은 제공하고 있다.**
+    - `DataAccessException` 에 필요한 예외 가져다 사용
+    - `SQLErrorCodeSQLExceptionTranslator` 로 예외변환기 한줄작성
+    - **(중요)단, JdbcTemplate 을 사용하면 지금까지 배운 모든걸 한번에 제공해준다..!**
+- **체크 예외**는 비지니스 로직상 너무 중요해서 **의도적으로 던지는 예외에만** 사용하자 -> 예로 계좌이체 실패 예외
+
+<br>
+
+**런타임예외 사용그림 -> 예외 공통 처리까지 자동으로 던져줌**
+
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/e431ccb4-ddef-43f9-b315-50937ee532c8) 
+
+<br>
+
+**스프링이 제공하는 예외 추상화 그림**
+
+<img src="https://github.com/BH946/spring-first-roadmap/assets/80165014/56296381-8d05-44fd-894f-4f3d62b74841" alt="image" style="zoom:67%;" /> 
+
+<br>
+
+test 패키지에 있는 exception/basic 하위에 `CheckedAppTest, CheckedTest, UnCheckedAppTest, UncheckedTest` 참고
 
 <br><br>
 
