@@ -27,7 +27,6 @@
 
 
 * **[스프링 MVC 2편 - 백엔드 웹 개발 핵심 기술](./spring_study_5/)**
-
   * **[스프링 MVC 2편 - thymeleaf](./spring_study_5/thymeleaf-basic/)**
   * **[스프링 MVC 2편 - message](./spring_study_5/message/)**
   * **[스프링 MVC 2편 - validation](./spring_study_5/validation/)**
@@ -35,3 +34,5 @@
   * **[스프링 MVC 2편 - login](./spring_study_5/login/)**
   * **[스프링 MVC 2편 - exception](./spring_study_5/exception/)**
   * **[스프링 MVC 2편 - upload](./spring_study_5/upload/)**
+* **[스프링 DB 1편 - 데이터 접근 핵심 원리](./spring_study_6/)**
+

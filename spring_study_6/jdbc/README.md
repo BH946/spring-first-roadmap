@@ -235,9 +235,108 @@ test 패키지에 있는 exception/basic 하위에 `CheckedAppTest, CheckedTest,
 
 ## (서비스)스프링 제공 - 트랜잭션
 
+**다양한 내용들이 있지만 @Transactional 을 사용하면 된다는게 결론!**
 
+- 트랜잭션 매니저(추상화), 트랜잭션 동기화, 트랜잭션 템플릿 모두 제공됨!
 
+<br>
 
+JDBC, JPA 등 기술변경 쉽게 스프링에서 제공하는 `PlatformTransactionManager` 인터페이스 활용
+
+=> 이것과 구현체들을 **"트랜잭션 매니저"**라고 명칭
+
+<br>
+
+**트랜잭션 동기화 (같은 커넥션을 유지)**
+
+- `ThreadLocal` 을 사용하는 **"트랜잭션 동기화 매니저"** 를 스프링이 제공하여 **멀티스레드 환경에서 안전하게 커넥션 동기화**
+- ThreadLocal 은 스레드마다 별도의 저장소가 부여되는 특징을 가짐
+
+<br>
+
+`DataSourceUtils.getConnection(dataSource);` 가 **"트랜잭션 동기화 매니저"** 에서 커넥션을 가져와 사용하는 소스!
+
+`DataSourceUtils.releaseConnection(con,dataSource);` 커넥션 반환할 때! **"트랜잭션 동기화 매니저"** 가 관리하는 커넥션이면 닫지않고 그대로 자동으로 유지해주고, 커밋과 롤백 땐 내부적으로 알아서 커넥션 반환까지 함.
+
+- 커넥션 풀 사용시 커넥션 풀로 반환
+
+<br>
+
+**트랜잭션 매니저의 전체 흐름** -> `DataSourceTransactionManager` 동작 흐름 위주로 설명
+
+**(1) 트랜잭션 시작**
+
+<img src="https://github.com/BH946/spring-first-roadmap/assets/80165014/15a9adbe-794c-45b7-9f4a-e42caa2cc51c" alt="image" style="zoom:80%;" /> 
+
+<br>
+
+**(2) 로직 실행**
+
+<img src="https://github.com/BH946/spring-first-roadmap/assets/80165014/18c8c408-cb76-49ae-9a44-6aa16937566e" alt="image" style="zoom:80%;" /> 
+
+<br>
+
+**(3) 트랜잭션 종료**
+
+<img src="https://github.com/BH946/spring-first-roadmap/assets/80165014/7d5965f2-c553-4c4e-bcdb-65a8984c2b1d" alt="image" style="zoom:80%;" /> 
+
+<br>
+
+**(4) 트랜잭션 AOP 적용 전체 흐름** -> AOP 프록시 추가
+
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/73e43b23-e793-4fb9-baff-6877e2ddce43) 
+
+<br>
+
+**트랜잭션 템플릿은??** -> 아직도 서비스 로직에 반복되는 트랜잭션 코드 패턴을 생략할 목적
+
+- `TransactionTemplate` 을 사용 -> 람다함수 형태로 작성된다.
+- 그런데 아직도 비지니스 로직에 트랜잭션 코드가 작성되었다는 문제가 있다.
+
+<br>
+
+**트랜잭션에 프록시 도입** -> 스프링 AOP
+
+- 스프링이 제공하는 트랜잭션 AOP 기능을 사용하면 프록시를 편리하게 적용 가능하다.
+
+  - @Aspect , @Advice , @Pointcut 등...
+
+- **스프링 부트**를 사용하면 트랜잭션 AOP를 처리하기 위해 필요한 **스프링 빈들도 자동으로 등록**
+
+  - 따라서 필요한곳에 @Transactional 을 사용하면 끝
+
+- 참고1) 트랜잭션을 위해 DataSource, PlatformTransactionManager 가 스프링빈으로 등록되어야 트랜잭션 AOP가 정상 동작
+
+  - 스프링의 트랜잭션 AOP는 스프링 빈에 등록된 트랜잭션 매니저를 사용
+
+- 참고2) 스프링 부트의 자동 리소스 등록
+
+  - `application.properties` 에 다음과같이 등록하면 자동 리소스 등록 (Datasource)
+
+    - ```properties
+      spring.datasource.url=jdbc:h2:tcp://localhost/~/test
+      spring.datasource.username=sa
+      spring.datasource.password=
+      ```
+
+    - 스프링 부트가 기본으로 생성하는 데이터소스는 커넥션풀을 제공하는 **HikariDataSource** 이므로 커넥션 풀 설정도 가능
+
+    - 만약 spring.datasource.url 속성이 없으면 내장 데이터베이스(메모리 DB)를 생성하려고 시도
+
+  - 트랜잭션 매니저도 스프링 부트가 자동으로 빈에 등록(PlatformTransactionManager)
+
+    - 현재 등록된 라이브러리를 보고 판단
+    - JDBC 인지 JPA 인지 등...
+
+<br>
+
+`MemberRepositoryV3_1` : 트랜잭션 매니저 - PlatformTransactionManager 사용
+
+`MemberRepositoryV3_2` : 트랜잭션 템플릿 - TransactionTemplate 사용 (람다함수 형태)
+
+`MemberRepositoryV3_3` : 트랜잭션 AOP - @Transactional 사용
+
+`MemberServiceV3_4Test` : 스프링 부트의 자동 리소스 등록 버전! -> `application.properties`
 
 <br><br>
 

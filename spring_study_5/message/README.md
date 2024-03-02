@@ -40,10 +40,9 @@
 `MessageSource` 를 스프링 빈에 등록해야하는데 인터페이스라서 구현체인 `ResourceBundleMessageSource ` 를 등록해야한다.
 
 * 직접 @Bean으로 등록해도 되지만 **쉬운방법이 존재**
-
 * `application.properties` 에 `spring.messages.basename=message` 를 추가!!
-
 * 이후 `messages.properties` 를 추가해서 messages에 담을 내용을 세팅하면 끝!
+* 참고) 한글 깨지면 세팅에서 File-Encoding 부분을 UTF-8로 수정
 
 <br>
 
