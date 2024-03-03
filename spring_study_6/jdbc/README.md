@@ -406,6 +406,8 @@ public class MemberRepositoryV5 implements MemberRepository {
 
 <br>
 
+참고로 우리가 사용하는 `@Repository, @Service` 는 스프링부트가 스프링 빈에 직접 등록해준것이었다.
+
 ```java
 /**
  * 예외 누수 문제 해결
