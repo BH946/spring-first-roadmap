@@ -113,7 +113,7 @@
 **소스파일 참고**
 
 - JdbcTemplateItemRepositoryV1 -> JdbcTemplate 기본 사용 문법
-- JdbcTemplateV1Config -> 레포지토리, 서비스 "빈 등록"
+- JdbcTemplateV1Config -> 레포지토리, 서비스 "빈 등록" -> V2, V3 은 생략 (유사해서)
 - JdbcTemplateItemRepositoryV2 -> 이름 지정 파라미터 사용 (모호함 제거, 유지보수 상승)
   - 이름 지정 파라미터 -> 모호함을 제거
     - NamedParameterJdbcTemplate
@@ -124,7 +124,10 @@
     - Map
   - 매퍼의 기능을 "자동화"
     - BeanPropertyRowMapper	
-- 
+- JdbcTemplateItemRepositoryV3 -> SimpleJdbcInsert 추가로 자동증가 키 설정이 간단
+  - 기존 V2에서 save 함수 부분(insert) 을 SimpleJdbcInsert 로 대체하는 형태
+
+
 
 
 
