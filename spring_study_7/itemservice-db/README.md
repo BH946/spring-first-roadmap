@@ -10,6 +10,8 @@
 
 이곳 README.md 파일에는 기억할 내용들만 간략히 정리하겠습니다.
 
+소스 코드는 커밋 위주로 보는게 좋습니다.
+
 * **프로젝트는 ?개를 진행**
   * **?** -> ?
 
@@ -112,6 +114,17 @@
 
 - JdbcTemplateItemRepositoryV1 -> JdbcTemplate 기본 사용 문법
 - JdbcTemplateV1Config -> 레포지토리, 서비스 "빈 등록"
+- JdbcTemplateItemRepositoryV2 -> 이름 지정 파라미터 사용 (모호함 제거, 유지보수 상승)
+  - 이름 지정 파라미터 -> 모호함을 제거
+    - NamedParameterJdbcTemplate
+  - Map 과 같이 보통 키, 값 으로 이루어진 자료구조 (SQL에 특화된 param)
+    - SqlParameterSource
+      - BeanPropertySqlParameterSource
+      - MapSqlParameterSource
+    - Map
+  - 매퍼의 기능을 "자동화"
+    - BeanPropertyRowMapper	
+- 
 
 
 
