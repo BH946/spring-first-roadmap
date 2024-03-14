@@ -503,9 +503,9 @@ JPA를 사용하며 기본적인 기능들을 이미 만들어서 제공해주�
 
 - SpringDataJpaConfig -> 빈 등록하는 설정 파일
 - SpringDataJpaItemRepository 인터페이스 -> JpaRepository 인터페이스를 상속하여 생성한 인터페이스
-  - 사용법1) 이녀석을 바로 "서비스" 에서 사용해도 된다.
+  - **사용법1)** 이녀석을 바로 "서비스" 에서 사용해도 된다.
 - JpaItemRepositoryV2 -> 기존에 만들어둔 ItemRepository 인터페이스를 구현하는데 SpringDataJpaItemRepository 까지 활용한 구현체
-  - 사용법2) 이렇게 SpringDataJpaItemRepository 를 중간에 어댑터 역할을 하게 하고 ItemRepository 구현체로써 "서비스" 에서 사용해도 된다.
+  - **사용법2)** 이렇게 SpringDataJpaItemRepository 를 중간에 어댑터 역할을 하게 하고 ItemRepository 구현체로써 "서비스" 에서 사용해도 된다.
 - **무엇이 더 좋은가? 이런 의문의 해결은 뒤에서 설명!**
 
 <br><br>
@@ -577,17 +577,67 @@ JPA를 사용하며 기본적인 기능들을 이미 만들어서 제공해주�
 
 **소스파일 참고**
 
-
-
-
+- QuerydslConfig -> 스프링 빈 등록 설정파일
+- JpaItemRepositoryV3 -> QueryDSL 과 JPA 활용
+- 그럼 스프링데이터JPA는 사용안하나?? -> 아래에서 설명하겠다.
 
 <br><br>
 
 ## 데이터 접근 기술 활용 방안
 
+**어댑터 추가ver** -> 기존 레포지토리 인터페이스를 구현하는데 스프링데이터JPA 까지 추가 사용
 
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/8bb3a73d-6a32-4af8-affa-903268f4363d) 
 
+<br>
 
+**단순ver** -> 스프링데이터JPA 를 바로 사용
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/75a7eb76-ad93-4b35-8efe-b674a777dec3)
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/ea89fc3f-82d0-4721-9987-3c996b1767a0) 
+
+<br>
+
+**트레이드 오프 -> 구조의 안정성 vs 단순한 구조와 개발 편리성**
+
+- **어댑터 추가ver** : DI, OCP를 지키기 위해 어댑터를 도입하고, 더 많은 코드를 유지한다.
+- **단순ver** : 어댑터를 제거하고 구조를 단순하게 가져가지만, DI, OCP를 포기하고, ItemService 코드를 직접 변경한다.
+
+<br>
+
+무엇을 선택해야할까? **"상황에 맞게 선택하는게 옳다."**
+
+- 추상화도 비용이 들기 때문에 어설픈 추상화는 오히려 독이 되기도 하기 때문이다.
+- 이 추상화 비용을 넘어설 효과가 있을때 추상화를 도입하자.
+
+<br>
+
+**스프링데이터JPA 에 QueryDSL 은 사용안하는가?? -> 실무에선 같이 사용한다.**
+
+아래 그림처럼 해당 구조로 보통 사용
+
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/84848291-8be9-4f6d-a9df-787527bcab90) 
+
+<br><br>
+
+**그래서 결론은 무엇을 추천하는가??**
+
+- **JPA, 스프링 데이터 JPA, Querydsl 을 기본으로 사용**
+  - 어댑터 추가ver, 단순ver 은 상황에 맞게 선택!
+  - 상관없다면?? **단순ver을 사용**하자 -> **스프링데이터JPA + QueryDSL** 를 기본으로 잡자!
+- **복잡한 쿼리가 잘 해결이 안될때 해당 부분은 JdbcTemplate이나 MyBatis를 함께 사용**
+  - JPA랑 JDBC는 트랜잭션 매니저가 다를텐데 어떡하나??
+  - `JpaTransactionManager` 가 대부분 기능들을 제공해서 괜찮다고 한다.
+  - 단, JPA 플러시 타이밍에 주의
+
+<br>
+
+**소스파일 참고**
+
+- ItemRepositoryV2 인터페이스 -> JPaRepository 인터페이스를 상속받아 생성한 인터페이스
+  - 스프링데이터JPA 사용
+- ItemQueryRepositoryV2 -> JPAQueryFactory, EntityManager 사용 + BooleanExpression
+  - QueryDSL 사용
+- ItemServiceV2 -> 위 2개 레포지토리를 사용한 서비스로직
 
 <br><br>
 
