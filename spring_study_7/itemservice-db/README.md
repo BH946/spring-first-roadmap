@@ -512,17 +512,70 @@ JPA를 사용하며 기본적인 기능들을 이미 만들어서 제공해주�
 
 ### QueryDSL
 
+**스프링데이터JPA의 동적쿼리 작성 문제를 해결해주는 좋은 도구이다.**
 
+**그리고 쿼리는 타입체크가 없어서 에러 잡기가 너무 힘든데 이를 해결해준다.**
 
+**QureyDSL -> JPQL -> SQL 변환**
 
+**라이브러리 추가**
 
+- gradle 에 필요한 것들 추가
+  - 라이브러리 추가, 자동 생성 Q클래스를 gradle clean으로 제거
+- (참고) 빌드할때 방식에 따라 Q클래스 확인법이 다르다.
+  - gradle 빌드방식
+  - intelliJ idea 빌드방식
 
+<br>
 
+**동작방식**
 
+- Querydsl을 사용하려면 `JPAQueryFactory` 가 필요 
+- JPAQueryFactory 는 JPA 쿼리인 JPQL을 만들기 때문에 `EntityManager` 가 필요
+- 설정방식은 `JdbcTemplate` 와 유사
 
-스프링데이터JPA와 QueryDSL 만 좀 정리하면서 코드 따라하자. (커밋따로!) -> 위 MyBatis 복붙해서 따라하면 됨.
+<br>
 
+**findAllOld -> findAll 리팩토링 부분 참고**
 
+- Querydsl을 사용해서 동적 쿼리 문제를 해결
+
+- `BooleanBuilder` 를 사용해서 원하는 where 조건들을 삽입
+
+- 이 모든 것을 자바 코드로 작성!
+
+  - ```java
+    @Override
+    public List<Item> findAll(ItemSearchCond cond) {
+    
+        String itemName = cond.getItemName();
+        Integer maxPrice = cond.getMaxPrice();
+    
+        return query
+            .select(item)
+            .from(item)
+            .where(likeItemName(itemName), maxPrice(maxPrice))
+            .fetch();
+    }
+    
+    private BooleanExpression likeItemName(String itemName) {
+        if (StringUtils.hasText(itemName)) {
+            return item.itemName.like("%" + itemName + "%");
+        }
+        return null;
+    }
+    
+    private BooleanExpression maxPrice(Integer maxPrice) {
+        if (maxPrice != null) {
+            return item.price.loe(maxPrice);
+        }
+        return null;
+    }
+    ```
+
+<br>
+
+**소스파일 참고**
 
 
 
