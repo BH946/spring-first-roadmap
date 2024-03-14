@@ -272,15 +272,257 @@
 
 ![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/936dfbda-8640-467b-99b4-17189ef094fb) 
 
+**스프링 예외 추상화 (예외변환)도 JdbcTemplate처럼 자동으로 제공**
+
 <br>
 
 **간단한 문법 소개**
 
+**동적 SQL** -> `if, choose (when, otherwise) , trim (where, set), foreach`
 
+- **if**
+
+  - ```xml
+    <select id="findActiveBlogWithTitleLike" 
+    resultType="Blog">
+      SELECT * FROM BLOG
+      WHERE state = ‘ACTIVE’ 
+      <if test="title != null"> 
+        AND title like #{title} 
+      </if>
+    </select>
+    ```
+
+- **choose, when, otherwise** -> switch 구문과 유사
+
+  - ```xml
+    <select id="findActiveBlogLike" 
+    resultType="Blog">
+      SELECT * FROM BLOG WHERE state = ‘ACTIVE’ 
+      <choose>
+        <when test="title != null"> 
+          AND title like #{title} 
+        </when>
+        <when test="author != null and author.name != null"> 
+          AND author_name like #{author.name}
+        </when>
+        <otherwise> 
+          AND featured = 1 
+        </otherwise>
+      </choose> 
+    </select>
+    ```
+
+- **trim, where, set**
+
+  - ```xml
+    기존 문제점은 아래 if 문 전부 만족 안할시 "where" 만 남는 문제점.
+    
+    <select id="findActiveBlogLike" 
+    resultType="Blog">
+      SELECT * FROM BLOG 
+      WHERE
+      <if test="state != null"> 
+        state = #{state}
+      </if>
+      <if test="title != null"> 
+        AND title like #{title} 
+      </if>
+      <if test="author != null and author.name != null"> 
+        AND author_name like #{author.name}
+      </if> 
+    </select>
+    ```
+
+  - ```xml
+    그러나 <where></where> 사용시 이러한 문제를 해결 (자동으로 where 없애거나 and 없애거나 해줌)
+    
+    <select id="findActiveBlogLike" 
+    resultType="Blog">
+      SELECT * FROM BLOG 
+      <where>
+        <if test="state != null"> 
+             state = #{state} 
+        </if>
+        <if test="title != null"> 
+            AND title like #{title} 
+        </if>
+        <if test="author != null and author.name != null"> 
+            AND author_name like #{author.name}
+        </if> 
+      </where> 
+    </select>
+    ```
+
+  - ```xml
+    trim 을 사용해도 가능
+    
+    <trim prefix="WHERE" prefixOverrides="AND |OR ">
+      ...
+    </trim>
+    ```
+
+- **foreach** -> 반복문
+
+  - ```xml
+    <select id="selectPostIn" resultType="domain.blog.Post"> 
+      SELECT *
+      FROM POST P 
+      <where>
+        <foreach item="item" index="index" collection="list"
+    open="ID in (" separator="," close=")" nullable="true">
+              #{item} 
+        </foreach> 
+      </where> 
+    </select>
+    ```
+
+<br>
+
+**기타 기능**
+
+- **애노테이션으로 SQL 작성** -> xml 대신 애노테이션에 SQL 작성
+
+  - ```java
+    @Select("select id, item_name, price, quantity from item where id=#{id}") 
+    Optional<Item> findById(Long id);
+    ```
+
+- **문자열 대체** -> SQL 인젝션 공격을 당할 수 있어서 권장하지 않음
+
+  - ```java
+    @Select("select * from user where ${column} = #{value}")
+    User findByColumn(@Param("column") String column, @Param("value") String value);
+    ```
+
+- **재사용 가능한 SQL 조각**
+
+  - ```xml
+    <sql id="userColumns"> ${alias}.id,${alias}.username,${alias}.password </sql> 
+    <select id="selectUsers" resultType="map">
+      select
+        <include refid="userColumns"><property name="alias" value="t1"/></include>, 
+        <include refid="userColumns"><property name="alias" value="t2"/></include> 
+      from some_table t1
+        cross join some_table t2 
+    </select>
+    ```
+
+- **Result Maps** -> as 별칭을 대체 가능
+
+  - ```xml
+    as 별칭 사용 모습
+    
+    <select id="selectUsers" resultType="User"> 
+      select
+        user_id             as "id",
+        user_name           as "userName", 
+        hashed_password     as "hashedPassword" 
+      from some_table
+      where id = #{id} 
+    </select>
+    ```
+
+  - ```xml
+    resultmap 사용 모습
+    
+    <resultMap id="userResultMap" type="User"> 
+      <id property="id" column="user_id" />
+      <result property="username" column="user_name"/>
+      <result property="password" column="hashed_password"/> 
+    </resultMap>
+    <select id="selectUsers" resultMap="userResultMap"> 
+      select user_id, user_name, hashed_password
+      from some_table 
+      where id = #{id} 
+    </select>
+    ```
 
 <br>
 
 **소스파일 참고**
+
+- ItemMapper 인터페이스 -> Mybatis 매핑 XML을 호출해주는 "매퍼 인터페이스" (@Mapper 사용)
+
+- MyBatisItemRepository -> 프록시 ItemMapper 구현체로 레포지토리 로직 구현
+- MyBatisConfig -> 스프링 빈 등록
+- resources/hello/itemservice/repository/mybatis/ItemMapper.xml -> SQL 작성!
+
+<br><br>
+
+### JPA
+
+**참고 : [자바 ORM 표준 JPA 프로그래밍 - 기본편](https://github.com/BH946/spring-second-roadmap/tree/main/spring_study_3)**
+
+<br><br>
+
+### Spring Data JPA
+
+JPA를 사용하며 기본적인 기능들을 이미 만들어서 제공해주는 좋은 **도구로 볼 수 있다.**
+
+**라이브러리 추가하여 사용**
+
+- 해당 라이브러리에 **JDBC, 하이버네이트, JPA 도 전부 포함**된다.
+- **동적 프록시 기술**이 구현체를 자동으로 만들기 때문에 `JpaRepository` 인터페이스를 상속해서 **인터페이스를 만들기**만 하면 바로 사용가능!
+
+<br>
+
+**주요기능** -> 간단한 건 쿼리메서드, 복잡한 건 @Query 권장
+
+- **기본 공통 기능들** (ex:CRUD) 제공 + 여러 조회들 등등
+  - findAll() -> CRUD 로 기본 제공 메소드
+    - 변환 JQPL : `select i from Item i`
+
+- **쿼리 메서드 기능 제공** -> 메소드 이름을 문법에 맞게 작성시 자동 JPQL 제공
+  - findByItemNameLike()
+    - 변환 JQPL : `select i from Item i where i.name like ?`
+    - 사용 예시 : `repository.findByItemNameLike("%" + itemName + "%");`
+  - findByPriceLessThanEqual()
+    - 변환 JQPL : `select i from Item i where i.price <= ?`
+  - findByItemNameLikeAndPriceLessThanEqual()
+    - 변환 JQPL : `select i from Item i where i.itemName like ? and i.price <= ?`
+
+- **쿼리 직접 실행** -> @Query("...") 사용시 수동 JPQL 작성 가능
+
+  - ```java
+    @Query("select i from Item i where i.itemName like :itemName and i.price 
+    <= :price")
+    List<Item> findItems(@Param("itemName") String itemName, @Param("price") 
+    Integer price);
+    ```
+
+<br>
+
+**클래스 의존 관계와 런타임 객체 의존 관계** -> 중간에 어댑터 역할 ver
+
+![image](https://github.com/BH946/spring-first-roadmap/assets/80165014/8bb3a73d-6a32-4af8-affa-903268f4363d) 
+
+<br>
+
+**소스파일 참고**
+
+- SpringDataJpaConfig -> 빈 등록하는 설정 파일
+- SpringDataJpaItemRepository 인터페이스 -> JpaRepository 인터페이스를 상속하여 생성한 인터페이스
+  - 사용법1) 이녀석을 바로 "서비스" 에서 사용해도 된다.
+- JpaItemRepositoryV2 -> 기존에 만들어둔 ItemRepository 인터페이스를 구현하는데 SpringDataJpaItemRepository 까지 활용한 구현체
+  - 사용법2) 이렇게 SpringDataJpaItemRepository 를 중간에 어댑터 역할을 하게 하고 ItemRepository 구현체로써 "서비스" 에서 사용해도 된다.
+- **무엇이 더 좋은가? 이런 의문의 해결은 뒤에서 설명!**
+
+<br><br>
+
+### QueryDSL
+
+
+
+
+
+
+
+
+
+스프링데이터JPA와 QueryDSL 만 좀 정리하면서 코드 따라하자. (커밋따로!) -> 위 MyBatis 복붙해서 따라하면 됨.
+
+
 
 
 
