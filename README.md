@@ -35,4 +35,5 @@
   * **[스프링 MVC 2편 - exception](./spring_study_5/exception/)**
   * **[스프링 MVC 2편 - upload](./spring_study_5/upload/)**
 * **[스프링 DB 1편 - 데이터 접근 핵심 원리](./spring_study_6/)**
+* **[스프링 DB 2편 - 데이터 접근 활용 기술](./spring_study_7/)**
 
